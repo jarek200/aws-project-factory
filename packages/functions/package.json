@@ -1,0 +1,32 @@
+{
+  "name": "@admin/functions",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@admin/core": "workspace:*",
+    "@aws-sdk/client-dynamodb": "^3.922.0",
+    "@aws-sdk/client-iam": "^3.922.0",
+    "@aws-sdk/client-identitystore": "^3.1019.0",
+    "@aws-sdk/client-organizations": "^3.922.0",
+    "@aws-sdk/client-secrets-manager": "^3.922.0",
+    "@aws-sdk/client-sfn": "^3.922.0",
+    "@aws-sdk/client-sso-admin": "^3.1019.0",
+    "@aws-sdk/client-sts": "^3.922.0",
+    "@aws-sdk/lib-dynamodb": "^3.922.0",
+    "libsodium-wrappers": "^0.7.15",
+    "ulid": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.20.0"
+}

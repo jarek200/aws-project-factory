@@ -1,0 +1,8 @@
+{
+  "apps/admin/**/*.{js,jsx,ts,tsx,svelte}": ["pnpm --filter @admin/web exec biome check --write"],
+  "apps/admin/**/*.json": ["pnpm --filter @admin/web exec biome format --write"],
+  "infra/**/*.{js,jsx,ts,tsx}": ["pnpm exec biome check --write --no-errors-on-unmatched"],
+  "packages/**/*.{js,jsx,ts,tsx}": ["pnpm exec biome check --write --no-errors-on-unmatched"],
+  "*.{js,jsx,ts,tsx,mjs,cjs}": ["pnpm exec biome check --write --no-errors-on-unmatched"],
+  "*.json": ["pnpm exec biome format --write"]
+}
