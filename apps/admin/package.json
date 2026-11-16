@@ -15,7 +15,7 @@
     "bits-ui": "^2.14.4",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.0.0",
-    "tailwind-variants": "^3.1.1"
+    "tailwind-variants": "^4.0.2"
   },
   "devDependencies": {
     "@aws-amplify/api-graphql": "^4.6.4",
