@@ -12,7 +12,7 @@
   "dependencies": {
     "@admin/core": "workspace:*",
     "aws-amplify": "^6.14.4",
-    "bits-ui": "^2.14.4",
+    "bits-ui": "^2.21.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.0.0",
     "tailwind-variants": "^3.1.1"
