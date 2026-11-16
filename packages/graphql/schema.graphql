@@ -1,0 +1,206 @@
+type User {
+  userId: ID!
+  username: String!
+  email: String!
+  name: String
+  bio: String
+  avatar: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+input UpdateUserInput {
+  name: String
+  bio: String
+  avatar: String
+}
+
+# ─── Projects ───────────────────────────────────────────────────────────────
+
+enum ProvisioningPhase {
+  DRAFT
+  GITHUB
+  ACCOUNTS
+  CONFIGURE
+  """GitHub monorepo created; AWS accounts not provisioned yet (repo-first flow)."""
+  REPO_ONLY
+  DONE
+  FAILED
+}
+
+"""Lifecycle of closing a vended AWS account (factory automation)."""
+enum AccountClosureState {
+  NONE
+  CLOSING
+  CLOSED
+}
+
+"""Step Functions progress for account decommission (parallel to provisioning)."""
+enum DecommissionPhase {
+  IDLE
+  DISPATCH_DESTROY
+  TEARDOWN_BOOTSTRAP
+  UNASSIGN_IDENTITY_CENTER
+  CLOSE_ACCOUNT
+  DONE
+  FAILED
+}
+
+type ProjectAccount {
+  name: String!
+  email: String!
+  accountId: String
+  roleArn: String
+  awsSignInUrl: String
+  closureState: AccountClosureState
+  closedAt: String
+}
+
+input ProjectAccountInput {
+  name: String!
+  email: String!
+  """When set, bootstrap this existing Organizations member (skip CreateAccount). Must be 12 digits."""
+  accountId: String
+}
+
+type Project {
+  id: ID!
+  userId: String!
+  name: String!
+  slug: String!
+  description: String
+  templateRepo: String
+  githubOrg: String
+  accounts: [ProjectAccount!]!
+  provisioningPhase: ProvisioningPhase!
+  provisioningProgress: Int
+  executionArn: String
+  githubUrl: String
+  websiteUrl: String
+  awsSignInUrl: String
+  error: String
+  """Active only while a member account closure is running or failed."""
+  decommissionPhase: DecommissionPhase
+  decommissionExecutionArn: String
+  decommissionTargetAccountId: String
+  decommissionError: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+input CreateProjectInput {
+  name: String!
+  slug: String!
+  description: String
+  templateRepo: String
+  githubOrg: String
+  """Pass an empty list to create only the GitHub monorepo; use provisionProjectAws later."""
+  accounts: [ProjectAccountInput!]!
+  websiteUrl: String
+  awsSignInUrl: String
+}
+
+input ProvisionProjectAwsInput {
+  projectId: ID!
+  accounts: [ProjectAccountInput!]!
+}
+
+input UpdateProjectInput {
+  name: String
+  description: String
+  websiteUrl: String
+  awsSignInUrl: String
+  githubUrl: String
+}
+
+type GithubRepoOption {
+  fullName: String!
+  name: String!
+  isTemplate: Boolean!
+  private: Boolean!
+}
+
+# ─── AWS Organizations inventory (mirrored into AppTable) ───────────────────
+
+"""Member (and management) accounts from AWS Organizations, synced into DynamoDB."""
+type OrganizationAccount {
+  accountId: ID!
+  name: String
+  email: String
+  arn: String
+  """True for the organization management account (DescribeOrganization.MasterAccountId)."""
+  isManagementAccount: Boolean!
+  """AWS Organizations account lifecycle (State API). Former Status is not exposed."""
+  state: String
+  joinedMethod: String
+  joinedTimestamp: String
+  syncedAt: String!
+  """App-managed lifecycle when closing outside a factory project (or mirrored from inventory)."""
+  closureState: AccountClosureState
+  closedAt: String
+  decommissionPhase: DecommissionPhase
+  decommissionError: String
+}
+
+type OrganizationAccountSyncResult {
+  upserted: Int!
+  removed: Int!
+}
+
+type ProjectGithubSyncResult {
+  """Projects that had a confirmed githubUrl and were checked against the GitHub App installation."""
+  checked: Int!
+  """Projects deleted from AppTable because their repo is no longer visible to the installation."""
+  removed: Int!
+  """Projects skipped because provisioning is still in progress (or githubUrl not written yet)."""
+  skippedInProgress: Int!
+}
+
+type Query {
+  getMyProfile: User
+  listProjects: [Project!]!
+  getProject(id: ID!): Project
+  """Repositories visible to the configured GitHub App installation (for template selection)."""
+  listGithubReposForTemplate: [GithubRepoOption!]!
+  """
+  All accounts last synced from AWS Organizations into AppTable (run syncOrganizationAccounts to refresh).
+  """
+  listOrganizationAccounts: [OrganizationAccount!]!
+  """Single inventory row; use to poll decommission UI after closeStandaloneOrganizationAccount."""
+  getOrganizationAccount(accountId: ID!): OrganizationAccount
+}
+
+type Mutation {
+  updateUserProfile(input: UpdateUserInput!): User
+  createProject(input: CreateProjectInput!): Project!
+  """Vend AWS accounts, OIDC, Identity Center, and GitHub deploy config for a REPO_ONLY project."""
+  provisionProjectAws(input: ProvisionProjectAwsInput!): Project!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  deleteProject(id: ID!): Boolean!
+  """
+  Start Step Functions decommission: optional GitHub monorepo destroy workflow, bootstrap IAM teardown,
+  Identity Center unassign, Organizations CloseAccount, then mark account CLOSED in DynamoDB.
+  Set runMonorepoTeardown to false to skip dispatching the repo workflow (no GitHub Actions permission needed for that step).
+  """
+  closeProjectAccount(
+    projectId: ID!
+    accountId: ID!
+    runMonorepoTeardown: Boolean = true
+  ): Project!
+  """
+  Calls Organizations ListAccounts in the management account and upserts ORG_ACCOUNT# rows in AppTable.
+  Removes DynamoDB rows for accounts no longer in the organization.
+  """
+  syncOrganizationAccounts: OrganizationAccountSyncResult!
+  """
+  Lists repos visible to the GitHub App installation and deletes the caller's factory projects whose
+  confirmed githubUrl repo is no longer present (deleted or removed from the installation).
+  Skips projects still provisioning (GITHUB / ACCOUNTS / CONFIGURE, or REPO_ONLY without githubUrl).
+  """
+  syncProjectsWithGithub: ProjectGithubSyncResult!
+  """
+  Close an org member account without a factory project (or when not using project close): runs the same
+  decommission state machine with GitHub teardown skipped. Tracks progress on the ORG_ACCOUNT#… item.
+  """
+  closeStandaloneOrganizationAccount(accountId: ID!): OrganizationAccount!
+}
