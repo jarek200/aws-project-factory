@@ -31,6 +31,12 @@ Creating a project starts a Step Functions workflow:
 
 This repository itself deploys as **one** stack in **one** admin account (SST stage `admin`). Child projects use their own accounts.
 
+## Admin UI
+
+![New project form: name, slug, GitHub template, and AWS account suffixes](docs/images/new-project.png)
+
+The admin UI is where you start a project. A draft collects the name, slug, GitHub template, and account suffixes, then the Step Functions workflow above creates the repo and accounts.
+
 ## Security
 
 The factory can create AWS accounts, assume `OrganizationAccountAccessRole`, write IAM roles, and read a GitHub App private key from Secrets Manager. Deploy it only in an account you control, with credentials limited to people who should be able to create accounts. See [SECURITY.md](SECURITY.md).
