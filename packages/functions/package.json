@@ -24,9 +24,9 @@
     "ulid": "^3.0.1"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.145",
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
   },
   "packageManager": "pnpm@10.20.0"
 }
