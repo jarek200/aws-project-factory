@@ -21,7 +21,7 @@
     "@aws-sdk/client-sts": "^3.922.0",
     "@aws-sdk/lib-dynamodb": "^3.922.0",
     "libsodium-wrappers": "^0.7.15",
-    "ulid": "^3.0.1"
+    "ulid": "^3.0.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
